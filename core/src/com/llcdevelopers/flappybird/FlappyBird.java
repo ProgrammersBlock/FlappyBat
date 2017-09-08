@@ -53,7 +53,7 @@ public class FlappyBird extends ApplicationAdapter {
 
 	float gameOverY = 0;
 
-
+	// Basically creates the variables we use/change later on.
 
 	@Override
 	public void create () {
@@ -82,6 +82,8 @@ public class FlappyBird extends ApplicationAdapter {
 		birdY = Gdx.graphics.getHeight() / 2 - birds[0].getHeight() / 2;
 		gameOverY = Gdx.graphics.getHeight();
 
+		// Basically creates objects based on the variables we created above.
+
 		startGame();
 
 	}
@@ -96,20 +98,36 @@ public class FlappyBird extends ApplicationAdapter {
 			topTubeRectangles[i] = new Rectangle();
 			bottomTubeRectangles[i] = new Rectangle();
 		}
+
+		// This is the class we reference back to when the game is reloaded after gameOver.
+		// It resets the locations, values, etc that need to be reset. No point in reloading everything else.
+
 	}
 
 
 	@Override
 	public void render () {
 
+		// This is the class that constantly renders as the program is running.
+		// You draw the Sprites, update values, etc within the render class.
+
 		batch.begin();
 		batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
+		// Draws the background image.
+
 		batch.draw(birds[flapState], Gdx.graphics.getWidth() / 2 - birds[flapState].getWidth() / 2, birdY);
+
+		// Draws the initial bat image.
 
 		if (gameState == 1) {
 
+			// When gameState = 1, the user is in the middle of playing the game.
+
 			if (tubeX[scoringTube] < Gdx.graphics.getWidth() / 3) {
+
+				// When every 4th tube (or however many tubes there are later on) passes this X position,
+				// one point is added to the current score.
 
 				score++;
 
@@ -117,9 +135,14 @@ public class FlappyBird extends ApplicationAdapter {
 
 					scoringTube++;
 
+					// Because there are multiple tubes on the screen at once, one tube has to add a point at a time.
+					// One is added to the value of scoringTube until it reaches what we set as the numberOfTubes on-screen.
+
 				} else {
 
 					scoringTube = 0;
+
+					// After a point is added to the score, scoringTube is returned to 0 and the process repeats.
 
 				}
 
@@ -131,6 +154,7 @@ public class FlappyBird extends ApplicationAdapter {
 				birds[0] = new Texture("bat2.png");
 				birds[1] = new Texture("bat2.png");
 
+
 			} else if (velocity < 0) {
 
 				birds[0] = new Texture("bat2.png");
@@ -140,6 +164,8 @@ public class FlappyBird extends ApplicationAdapter {
 				birds[0] = new Texture("bat.png");
 				birds[1] = new Texture("bat.png");
 			}
+
+			// This is what animates our bat each touch, but it doesn't delete previously used textures, causing a memory leak.
 
 			for (int i = 0; i < numberOfTubes; i++) {
 
@@ -158,8 +184,13 @@ public class FlappyBird extends ApplicationAdapter {
 				batch.draw(topTube, tubeX[i], Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i]);
 				batch.draw(bottomTube, tubeX[i], Gdx.graphics.getHeight() / 2 - gap / 2 - bottomTube.getHeight() + tubeOffset[i]);
 
+				// All of this creates all the tubes on the screen, randomizes their Y-values, and moves them to the left.
+
 				topTubeRectangles[i] = new Rectangle(tubeX[i] + 100, Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i], topTube.getWidth() - 150, topTube.getHeight());
 				bottomTubeRectangles[i] = new Rectangle(tubeX[i] + 100, Gdx.graphics.getHeight() / 2 - gap / 2 - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth() - 150, bottomTube.getHeight());
+
+				// Creates rectangles (shapes) around the tubes used for collisions.
+
 			}
 
 			if (birdY > 0) {
@@ -172,10 +203,15 @@ public class FlappyBird extends ApplicationAdapter {
 
 			}
 
+			// Keeps the bat from falling past the bottom of the screen and ends the game upon collision with the bottom.
+
 		} else if (gameState == 0) {
 			if (Gdx.input.justTouched()) {
 				gameState = 1;
 			}
+
+			// gameState = 0 is the very beginning of the game, and touching changes it to gameState = 1.
+
 		} else if (gameState == 2){
 
 			batch.draw(gameOver, Gdx.graphics.getWidth() / 2 - gameOver.getWidth() / 2, gameOverY);
@@ -184,6 +220,8 @@ public class FlappyBird extends ApplicationAdapter {
 
 				velocity = velocity + gravity;
 				gameOverY -= velocity;
+
+				// gameState = 2 is the gameOver screen. gameOver is animated.
 
 			} else {
 
@@ -196,6 +234,7 @@ public class FlappyBird extends ApplicationAdapter {
 					velocity = 0;
 					gameOverY = Gdx.graphics.getHeight();
 
+					// Once the gameOver screen is touched, all the values are reset, effectively restarting the game.
 
 				}
 
@@ -209,17 +248,23 @@ public class FlappyBird extends ApplicationAdapter {
 			flapState = 0;
 		}
 
+		// Not necessary at the moment. Used to animate bat without user input based on render speed.
+
 		font.draw(batch, String.valueOf(score), Gdx.graphics.getWidth() / 2 - 60, Gdx.graphics.getHeight() - 150);
+
+		// Draws the current score at the top of the screen.
 
 		batch.end();
 
 		birdCircle.set(Gdx.graphics.getWidth() / 2, birdY + birds[flapState].getHeight() / 3, birds[flapState].getHeight() / 4);
 
-
+		// Creates a circle (shape) around the bat used for collisions.
 
 		//shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		//shapeRenderer.setColor(Color.RED);
 		//shapeRenderer.circle(birdCircle.x, birdCircle.y, birdCircle.radius);
+
+		// Used to make the shapes around the sprites visible for testing. (All shapeRenderer is used for this.)
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			//shapeRenderer.rect(tubeX[i], Gdx.graphics.getHeight() / 2 + gap / 2 + tubeOffset[i], topTube.getWidth(), topTube.getHeight());
@@ -229,6 +274,10 @@ public class FlappyBird extends ApplicationAdapter {
 				Gdx.app.log("Collision", "Yes!");
 				gameState = 2;
 			}
+
+			// Checks to see if any shapes overlap, or collide, with one another.
+			// If so, gameState is set back to 2. gameOver.
+
 		}
 
 		//shapeRenderer.end();
