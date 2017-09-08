@@ -3,11 +3,13 @@ package com.llcdevelopers.flappybird;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 //import com.badlogic.gdx.Input;
+//import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 //import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
@@ -15,8 +17,8 @@ import com.badlogic.gdx.math.Rectangle;
 //import com.badlogic.gdx.scenes.scene2d.ui.Button;
 //import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 //import com.badlogic.gdx.utils.Scaling;
-
 import java.util.Random;
+import com.badlogic.gdx.graphics.g2d.Animation;
 
 public class FlappyBird extends ApplicationAdapter {
 	SpriteBatch batch;
@@ -36,8 +38,8 @@ public class FlappyBird extends ApplicationAdapter {
 
 	Texture gameOver;
 
-	Texture[] birds;
-	int flapState = 0;
+	Texture birds;
+	//int flapState = 0;
 	float birdY = 0;
 	float velocity = 0;
 	Circle birdCircle;
@@ -52,6 +54,17 @@ public class FlappyBird extends ApplicationAdapter {
 	BitmapFont font;
 
 	float gameOverY = 0;
+
+	// Constant rows and columns of the sprite sheet
+	private static final int FRAME_COLS = 2, FRAME_ROWS = 1;
+
+	// Objects used
+	Animation<TextureRegion> batAnimation; // Must declare frame type (TextureRegion)
+	Texture batSheet;
+	SpriteBatch spriteBatch;
+
+	// A variable for tracking elapsed time for the animation
+	float stateTime;
 
 	// Basically creates the variables we use/change later on.
 
@@ -76,11 +89,37 @@ public class FlappyBird extends ApplicationAdapter {
 		randomGenerator = new Random();
 		distanceBetweenTubes = 700;
 
-		birds = new Texture[2];
-		birds[0] = new Texture("bat.png");
-		birds[1] = new Texture("bat.png");
-		birdY = Gdx.graphics.getHeight() / 2 - birds[0].getHeight() / 2;
+		birds = new Texture("bat.png");
+		birdY = Gdx.graphics.getHeight() / 2 - birds.getHeight() / 2;
 		gameOverY = Gdx.graphics.getHeight();
+
+		// Load the sprite sheet as a Texture
+		batSheet = new Texture(Gdx.files.internal("spritesheet.png"));
+
+		// Use the split utility method to create a 2D array of TextureRegions. This is
+		// possible because this sprite sheet contains frames of equal size and they are
+		// all aligned.
+		TextureRegion[][] tmp = TextureRegion.split(batSheet,
+				batSheet.getWidth() / FRAME_COLS,
+				batSheet.getHeight() / FRAME_ROWS);
+
+		// Place the regions into a 1D array in the correct order, starting from the top
+		// left, going across first. The Animation constructor requires a 1D array.
+		TextureRegion[] walkFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
+		int index = 0;
+		for (int i = 0; i < FRAME_ROWS; i++) {
+			for (int j = 0; j < FRAME_COLS; j++) {
+				walkFrames[index++] = tmp[i][j];
+			}
+		}
+
+		// Initialize the Animation with the frame interval and array of frames
+		batAnimation = new Animation<TextureRegion>(0.17f, walkFrames);
+
+		// Instantiate a SpriteBatch for drawing and reset the elapsed animation
+		// time to 0
+		spriteBatch = new SpriteBatch();
+		stateTime = 0f;
 
 		// Basically creates objects based on the variables we created above.
 
@@ -89,7 +128,7 @@ public class FlappyBird extends ApplicationAdapter {
 	}
 
 	public void startGame() {
-		birdY = Gdx.graphics.getHeight() / 2 - birds[0].getHeight() / 2;
+		birdY = Gdx.graphics.getHeight() / 2 - birds.getHeight() / 2;
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			tubeX[i] = Gdx.graphics.getWidth() - topTube.getWidth() / 2 + i * distanceBetweenTubes + 200;
@@ -116,13 +155,15 @@ public class FlappyBird extends ApplicationAdapter {
 
 		// Draws the background image.
 
-		batch.draw(birds[flapState], Gdx.graphics.getWidth() / 2 - birds[flapState].getWidth() / 2, birdY);
+		//batch.draw(birds[flapState], Gdx.graphics.getWidth() / 2 - birds[flapState].getWidth() / 2, birdY);
 
 		// Draws the initial bat image.
 
 		if (gameState == 1) {
 
 			// When gameState = 1, the user is in the middle of playing the game.
+
+			//Sound pointSound = Gdx.audio.newSound(Gdx.files.internal("data/pointsound.wav"));
 
 			if (tubeX[scoringTube] < Gdx.graphics.getWidth() / 3) {
 
@@ -151,18 +192,19 @@ public class FlappyBird extends ApplicationAdapter {
 			if (Gdx.input.justTouched()) {
 
 				velocity = -30;
-				birds[0] = new Texture("bat2.png");
-				birds[1] = new Texture("bat2.png");
+				//birds = new Texture("bat2.png");
+				//birds = new Texture("bat2.png");
 
 
-			} else if (velocity < 0) {
+			//} else if (velocity < 0) {
 
-				birds[0] = new Texture("bat2.png");
-				birds[1] = new Texture("bat2.png");
+				//birds = new Texture("bat2.png");
+				//birds = new Texture("bat2.png");
 
-			} else {
-				birds[0] = new Texture("bat.png");
-				birds[1] = new Texture("bat.png");
+			//} else {
+
+				//birds = new Texture("bat.png");
+				//birds = new Texture("bat.png");
 			}
 
 			// This is what animates our bat each touch, but it doesn't delete previously used textures, causing a memory leak.
@@ -242,11 +284,11 @@ public class FlappyBird extends ApplicationAdapter {
 
 		}
 
-		if (flapState == 0) {
-			flapState = 1;
-		} else {
-			flapState = 0;
-		}
+		//if (flapState == 0) {
+			//flapState = 1;
+		//} else {
+			//flapState = 0;
+		//}
 
 		// Not necessary at the moment. Used to animate bat without user input based on render speed.
 
@@ -256,7 +298,7 @@ public class FlappyBird extends ApplicationAdapter {
 
 		batch.end();
 
-		birdCircle.set(Gdx.graphics.getWidth() / 2, birdY + birds[flapState].getHeight() / 3, birds[flapState].getHeight() / 4);
+		birdCircle.set(Gdx.graphics.getWidth() / 2, birdY + birds.getHeight() / 2, birds.getHeight() / 4);
 
 		// Creates a circle (shape) around the bat used for collisions.
 
@@ -282,6 +324,23 @@ public class FlappyBird extends ApplicationAdapter {
 
 		//shapeRenderer.end();
 
+		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); // Clear screen but we don't need
+		stateTime += Gdx.graphics.getDeltaTime(); // Accumulate elapsed animation time
+
+		// Get current frame of animation for the current stateTime
+		TextureRegion currentFrame = batAnimation.getKeyFrame(stateTime, true);
+		spriteBatch.begin();
+		spriteBatch.draw(currentFrame, Gdx.graphics.getWidth() / 2 - birds.getWidth() / 2, birdY); // Draw current frame at (50, 50)
+		spriteBatch.end();
+
+		// Draws the animated bat.
+
+	}
+
+	@Override
+	public void dispose() { // SpriteBatches and Textures must always be disposed
+		spriteBatch.dispose();
+		batSheet.dispose();
 	}
 
 }
